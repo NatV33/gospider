@@ -15,9 +15,9 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 
+	"github.com/NatV33/gospider/stringset"
 	"github.com/gocolly/colly/v2"
 	"github.com/gocolly/colly/v2/extensions"
-	"github.com/jaeles-project/gospider/stringset"
 	"github.com/spf13/cobra"
 )
 
