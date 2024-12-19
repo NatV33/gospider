@@ -71,6 +71,7 @@ type SpiderOutput struct {
 	Output     string `json:"output"`
 	StatusCode int    `json:"status"`
 	Length     int    `json:"length"`
+	FormDetails map[string]interface{} `json:"form_details"`
 }
 
 func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
@@ -381,17 +382,32 @@ func (crawler *Crawler) Start(linkfinder bool) {
 	})
 
 	// Handle form
-	crawler.C.OnHTML("form[action]", func(e *colly.HTMLElement) {
+	crawler.C.OnHTML("form", func(e *colly.HTMLElement) {
 		formUrl := e.Request.URL.String()
 		if !crawler.formSet.Duplicate(formUrl) {
-			outputFormat := fmt.Sprintf("[form] - %s", formUrl)
-			if crawler.JsonOutput {
-				sout := SpiderOutput{
-					Input:      crawler.Input,
-					Source:     "body",
-					OutputType: "form",
-					Output:     formUrl,
+			fomrDetails := map[string]interface{}{
+				"method": e.Attr("method"),
+				"action": e.Attr("action"),
+				"fields": []map[string]string{},
+			}
+
+			e.ForEach("input", func(_ int, el *colly.HTMLElement) {
+				field := map[string]string{
+					"type": el.Attr("type"),
+					"name": el.Attr("name"),
+					"value": el.Attr("value"),
 				}
+				formDetails["fields"] = append(formDetails["fields"].([]map[string]string), field)
+			})
+
+			sout := SpiderOutput{
+				Input: crawler.Input,
+				Source: formUrl,
+				OutputType: "form",
+				Output: formUrl,
+				FormDetails: formDetails,
+			}
+			if crawler.jsonOutput{
 				if data, err := jsoniter.MarshalToString(sout); err == nil {
 					outputFormat = data
 					fmt.Println(outputFormat)
