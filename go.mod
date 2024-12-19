@@ -1,4 +1,4 @@
-module github.com/jaeles-project/gospider
+module github.com/NatV33/gospider
 
 go 1.16
 
